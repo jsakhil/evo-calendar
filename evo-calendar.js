@@ -1,6 +1,7 @@
 /*
 
     Author: Edlyn Villegas
+    Modified By: Js Akhil
 
 */
 
@@ -28,6 +29,7 @@
                 firstDayOfWeek: 'Sun',
                 language: 'en',
                 todayHighlight: false,
+                weekdayHighlight: false,
                 sidebarDisplayDefault: true,
                 sidebarToggler: true,
                 eventListToggler: true,
@@ -157,6 +159,7 @@
 
             _.selectDate = $.proxy(_.selectDate, _);
             _.selectMonth = $.proxy(_.selectMonth, _);
+            _.navMonth = $.proxy(_.navMonth, _);
             _.selectYear = $.proxy(_.selectYear, _);
             _.toggleSidebar = $.proxy(_.toggleSidebar, _);
             _.toggleEventList = $.proxy(_.toggleEventList, _);
@@ -193,8 +196,14 @@
         new_month = (isNaN(new_month) || new_month == null) ? _.$active_month : new_month;
         new_year = (isNaN(new_year) || new_year == null) ? _.$active_year : new_year;
 
+        // find previous and next month
+        var last_month = _.$active_month - 1;
+        var next_month = _.$active_month + 1;
+
         // find number of days in month
         var monthLength = _.$cal_days_in_month[new_month];
+        var lastMonthLength = _.$cal_days_in_month[last_month];
+        var nextMonthLength = _.$cal_days_in_month[next_month];
 
         // compensate for leap year
         if (new_month == 1) { // February only!
@@ -220,6 +229,8 @@
         // do the header
         
         var monthName =  _.$cal_months_labels[new_month];
+        var lastMonth =  _.$cal_months_labels[last_month];
+        var nextMonth =  _.$cal_months_labels[next_month];
 
         var mainHTML = '';
         var sidebarHTML = '';
@@ -247,17 +258,21 @@
                 sidebarHTML += '" month-val="'+i+'">'+_.$cal_months_labels[i]+'</li>';
             }
             sidebarHTML += '</ul>';
-            if(_.options.sidebarToggler) {
-                sidebarHTML += '<span id="sidebarToggler" title="Close sidebar"><button class="icon-button"><span class="bars"></span></button></span>';
-            }
             _.$sidebarHTML = sidebarHTML;
         }
 
         function buildCalendarHTML() {
-            calendarHTML = '<table class="calendar-table">';
-            calendarHTML += '<tr><th colspan="7">';
-            calendarHTML +=  _.$formatDate(new Date(monthName +' '+ new_year), _.options.titleFormat, 'en');
-            calendarHTML += '</th></tr>';
+            calendarHTML = '<table class="calendar-table" current-year="'+new_year+'">';
+            calendarHTML += '<tr><th colspan="4"><div>';
+            calendarHTML += '<button class="icon-button" month-val="prev" title="Previous Month"><span class="chevron-arrow-left"></span></button>';
+            calendarHTML +=  '<p>'+_.$formatDate(new Date(monthName +' '+ new_year), _.options.titleFormat, 'en')+'</p>';
+            calendarHTML += '<button class="icon-button" month-val="next" title="Next Month"><span class="chevron-arrow-right"></span></button>';
+            calendarHTML += '</div></th>';
+            calendarHTML += '<td colspan="3">';
+            if (_.options.sidebarToggler) {
+                calendarHTML += '<span id="sidebarToggler" title="Month-Year Toggle"><button class="icon-button"><span class="active">Month</span><span>Year</span></button></span>';
+            }
+            calendarHTML += '</td></tr>';
             calendarHTML += '<tr class="calendar-header">';
             for(var i = 0; i <= 6; i++ ){
                 calendarHTML += '<td class="calendar-header-day">';
@@ -267,6 +282,8 @@
             calendarHTML += '</tr><tr class="calendar-body">';
             // fill in the days
             var day = 1;
+            var lmday = isNaN(lastMonthLength) ? 32 - startingDay : lastMonthLength - startingDay + 1;
+            var nmday = 1;
             // this loop is for is weeks (rows)
             for (var i = 0; i < 9; i++) {
                 // this loop is for weekdays (cells)
@@ -277,6 +294,14 @@
                         calendarHTML += '<div class="day'
                         calendarHTML += ((_.$active_date === thisDay) ? ' calendar-active' : '') + '" date-val="'+thisDay+'">'+day+'</div>';
                         day++;
+                    }else if(i == 0 && j <= startingDay){
+                        var lastDay = _.$formatDate(new Date(lastMonth +'/'+ lmday +'/'+ new_year), _.options.format, 'en');
+                        calendarHTML += '<div class="day lastmonth_day" date-val="'+lastDay+'">'+lmday+'</div>';
+                        lmday++;
+                    }else{
+                        var nextDay = _.$formatDate(new Date(nextMonth +'/'+ nmday +'/'+ new_year), _.options.format, 'en');
+                        calendarHTML += '<div class="day nextmonth_day" date-val="'+nextDay+'">'+nmday+'</div>';
+                        nmday++;
                     }
                     calendarHTML += '</td>';
                 }
@@ -295,13 +320,17 @@
             if(_.options.calendarEvents != null) {
                 var eventHTML = '<div class="event-header"><p>'+_.$formatDate(new Date(_.$active_date), _.options.eventHeaderFormat, 'en')+'</p></div>';
                 var hasEventToday = false;
-                eventHTML += '<div>';
+                eventHTML += '<div class="event-items-wrap">';
                 for (var i = 0; i < _.options.calendarEvents.length; i++) {
                     if(_.$active_date === _.options.calendarEvents[i].date) {
                         hasEventToday = true;
                         eventHTML += '<div class="event-container">';
-                        eventHTML += '<div class="event-icon"><div class="event-bullet-'+_.options.calendarEvents[i].type+'"></div></div>';
-                        eventHTML += '<div class="event-info"><p>'+_.options.calendarEvents[i].name+'</p></div>';
+                        eventHTML += '<div class="event-info">';
+                        eventHTML += (_.options.calendarEvents[i].from) ? '<div class="event-time"><div class="event-bullet-'+_.options.calendarEvents[i].type+'">'+ _.options.calendarEvents[i].from +'</div></div>' : '';
+                        eventHTML += '<p>'+_.options.calendarEvents[i].name+'</p></div>';
+                        eventHTML += '<div class="event-link">';
+                        eventHTML += (_.options.calendarEvents[i].link) ? '<a href="'+_.options.calendarEvents[i].link+'">View Event Details</a>' : '';
+                        eventHTML += '</div>';
                         eventHTML += '</div>';
                     } else if (_.options.calendarEvents[i].everyYear) {
                         var d = _.$formatDate(new Date(_.$active_date), 'mm/dd', 'en');
@@ -309,14 +338,17 @@
                         if(d==dd) {
                             hasEventToday = true;
                             eventHTML += '<div class="event-container">';
-                            eventHTML += '<div class="event-icon"><div class="event-bullet-'+_.options.calendarEvents[i].type+'"></div></div>';
-                            eventHTML += '<div class="event-info"><p>'+_.options.calendarEvents[i].name+'</p></div>';
+                            eventHTML += '<div class="event-info"><div class="event-bullet-'+_.options.calendarEvents[i].type+'"></div>';
+                            eventHTML += '<p>'+_.options.calendarEvents[i].name+'</p></div>';
+							eventHTML += '<div class="event-link">';
+							eventHTML += (_.options.calendarEvents[i].link) ? '<a href="'+_.options.calendarEvents[i].link+'">View Event Details</a>' : '';
+                            eventHTML += '</div>';
                             eventHTML += '</div>';
                         }
                     }
                 };
                 if(!hasEventToday) {
-                    eventHTML += '<p>No event for this day.. so take a rest! :)</p>';
+                    eventHTML += '<p>No event for this day.</p>';
                 }
                 eventHTML += '</div>';
                 _.$eventHTML = eventHTML;
@@ -370,6 +402,15 @@
 
         if(_.options.todayHighlight) {
             $('.day[date-val="'+_.$formatDate(_.$cal_months_labels[_.$month] +'/'+ _.$cal_current_date.getDate() +'/'+ _.$year, _.options.format, 'en')+'"]').addClass('calendar-today');
+        }
+
+        if(_.options.weekdayHighlight) {
+            $('.calendar-today').parent().addClass('day-active').parent().find('td').each(function(index, element){
+                if($(this).hasClass('day-active')){
+                    index = index + 1;
+                    $('.calendar-header td.calendar-header-day:nth-child('+index+')').addClass('header-day-active');
+                }
+            })
         }
 
         _.initEventListener();
@@ -458,6 +499,11 @@
            .off('click.evocalendar')
            .on('click.evocalendar', _.selectMonth);
 
+        // set event listener for each month
+        $('.calendar-table [month-val]')
+           .off('click.evocalendar')
+           .on('click.evocalendar', _.navMonth);
+
         // set event listener for year
         $('[year-val]')
            .off('click.evocalendar')
@@ -497,6 +543,56 @@
         $('[month-val]').removeClass('active-month');
         $('[month-val='+_.$active_month+']').addClass('active-month');
          _.buildCalendar('inner', _.$active_month);
+
+        if($(_.$calendar).hasClass('sidebar-hide')) {
+            $(_.$calendar).removeClass('sidebar-hide');
+        } else {
+            $(_.$calendar).addClass('sidebar-hide');
+        }
+
+    };
+
+    // navigate next/prev month
+    EvoCalendar.prototype.navMonth = function(event) {
+        var _ = this;
+        _.$active_year_el = $(event.currentTarget);
+        _.$active_month = $('.calendar-months li.month.active-month').attr("month-val");
+        _.$current_year = $('table.calendar-table').attr("current-year");
+
+        if($(event.currentTarget).attr("month-val") == "prev") {
+            --_.$active_month;
+            if(_.$active_month < 0 || isNaN(_.$active_month)){
+                --_.$current_year;
+                $('table.calendar-table').attr("current-year",_.$current_year);
+                $('.calendar-year p').text(_.$current_year);
+                $('.calendar-months li.month').removeClass("active-month");
+                $('.calendar-months li.month:last-child').addClass("active-month");
+                _.$active_month = $('.calendar-months li.month.active-month').attr("month-val");
+                _.buildCalendar('inner', _.$active_month, _.$current_year);
+            }else{
+                $('[month-val]').removeClass('active-month');
+                $('[month-val='+_.$active_month+']').addClass('active-month');
+                _.buildCalendar('inner', _.$active_month, _.$current_year);
+            }
+        } else if ($(event.currentTarget).attr("month-val") == "next") {
+            ++_.$active_month;
+            if(_.$active_month > 11 || isNaN(_.$active_month)){
+                ++_.$current_year;
+                $('table.calendar-table').attr("current-year",_.$current_year);
+                $('.calendar-year p').text(_.$current_year);
+                $('.calendar-months li.month').removeClass("active-month");
+                $('.calendar-months li.month:first-child').addClass("active-month");
+                _.$active_month = $('.calendar-months li.month.active-month').attr("month-val");
+                _.buildCalendar('inner', _.$active_month, _.$current_year);
+            }else{
+                $('[month-val]').removeClass('active-month');
+                $('[month-val='+_.$active_month+']').addClass('active-month');
+                _.buildCalendar('inner', _.$active_month, _.$current_year);
+            }
+        } else {
+
+        }
+
     };
 
     // select specific date
@@ -516,8 +612,12 @@
 
         if($(_.$calendar).hasClass('sidebar-hide')) {
             $(_.$calendar).removeClass('sidebar-hide');
+			$('#sidebarToggler button > span:first-child').removeClass('active');
+			$('#sidebarToggler button > span:last-child').addClass('active');
         } else {
             $(_.$calendar).addClass('sidebar-hide');
+			$('#sidebarToggler button > span:last-child').removeClass('active');
+			$('#sidebarToggler button > span:first-child').addClass('active');
         }
     };
 
