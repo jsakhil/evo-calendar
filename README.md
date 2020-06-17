@@ -100,7 +100,3 @@ addCalendarEvent | array | Add event to calendar
     }
   ]);
 ```
-
-> COMING SOON: Demo page
-
-> Note: this is just me, exploring things.. 🙂
