@@ -12,11 +12,17 @@
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro&display=swap" rel="stylesheet">
 </head>
 <style>
+    body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+    }
     main {
-        padding: 20px;
-        max-width: 1366px;
-        width: 100%;
-        margin: 0 auto;
+        padding: 0;
+        width: 60%;
+        margin: auto;
     }
     h1 {
         color: #755eb5;
@@ -27,9 +33,9 @@
     hr {
         margin-bottom: 20px;
     }
-    @media only screen and (max-width: 425px) {
+    @media only screen and (max-width: 575px) {
         main {
-            padding: 10px;
+            width: 100%;
         }
     }
 </style>
@@ -45,11 +51,12 @@
     <script src="evo-calendar.js"></script>
     <script>
         $('#evoCalendar').evoCalendar({
-            todayHighlight: true,
+            todayHighlight: false,
+            sidebarDisplayDefault: false,
             sidebarToggler: true,
-            eventListToggler: true,
+            eventListToggler: false,
             eventDisplayDefault: false,
-            canAddEvent: true,
+            canAddEvent: false,
             calendarEvents: [
                 { name: "New Year", date: "Wed Jan 01 2020 00:00:00 GMT-0800 (Pacific Standard Time)", type: "holiday", everyYear: true },
                 { name: "Valentine's Day", date: "Fri Feb 14 2020 00:00:00 GMT-0800 (Pacific Standard Time)", type: "holiday", everyYear: true },

@@ -5,7 +5,6 @@
 
 */
 
-
 (function(factory) {
     'use strict';
     if (typeof define === 'function' && define.amd) {
@@ -24,7 +23,7 @@
         function EvoCalendar(element, settings) {
             var _ = this, dataSettings;
             _.defaults = {
-                format: 'mm/dd/yyyy',
+                format: 'M/dd/yyyy',
                 titleFormat: 'MM yyyy',
                 eventHeaderFormat: 'MM d, yyyy',
                 firstDayOfWeek: 'Sun',
@@ -112,7 +111,7 @@
             if(_.options.calendarEvents != null) {
                 for(var i=0; i < _.options.calendarEvents.length; i++) {
                     if(_.isValidDate(_.options.calendarEvents[i].date)) {
-                        _.options.calendarEvents[i].date = _.$formatDate(new Date(_.options.calendarEvents[i].date), _.options.format, 'en')
+                        _.options.calendarEvents[i].date = _.$formatDate(new Date(_.options.calendarEvents[i].date), 'M/dd/yyyy', 'en')
                     }
                 }
             }
@@ -132,6 +131,22 @@
             _.$cal_months_labels = ['January', 'February', 'March', 'April',
                                  'May', 'June', 'July', 'August', 'September',
                                  'October', 'November', 'December'];
+
+			_.$cal_months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+			_.$cal_months_array = {
+				'Jan' : '01',
+				'Feb' : '02',
+				'Mar' : '03',
+				'Apr' : '04',
+				'May' : '05',
+				'Jun' : '06',
+				'Jul' : '07',
+				'Aug' : '08',
+				'Sep' : '09',
+				'Oct' : '10',
+				'Nov' : '11',
+				'Dec' : '12'
+			}
 
             // these are the days of the week for each month, in order
             _.$cal_days_in_month = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
@@ -229,9 +244,9 @@
 
         // do the header
         
-        var monthName =  _.$cal_months_labels[new_month];
-        var lastMonth =  _.$cal_months_labels[last_month];
-        var nextMonth =  _.$cal_months_labels[next_month];
+        var monthName =  _.$cal_months[new_month];
+        var lastMonth =  _.$cal_months[last_month];
+        var nextMonth =  _.$cal_months[next_month];
 
         var mainHTML = '';
         var sidebarHTML = '';
@@ -253,7 +268,7 @@
         function buildSidebarHTML() {
             sidebarHTML = '<div class="calendar-year"><button class="icon-button" year-val="prev" title="Previous year"><span class="chevron-arrow-left"></span></button>&nbsp;<p>'+new_year+'&nbsp;</p><button class="icon-button" year-val="next" title="Next year"><span class="chevron-arrow-right"></span></button></div>';
             sidebarHTML += '<ul class="calendar-months">';
-            for(var i = 0; i < _.$cal_months_labels.length; i++) {
+            for(var i = 0; i < _.$cal_months.length; i++) {
                 sidebarHTML += '<li class="month';
                 sidebarHTML += (parseInt(_.$active_month) === i) ? ' active-month' : ''
                 sidebarHTML += '" month-val="'+i+'">'+_.$cal_months_labels[i]+'</li>';
@@ -266,7 +281,7 @@
             calendarHTML = '<table class="calendar-table" current-year="'+new_year+'">';
             calendarHTML += '<tr><th colspan="4"><div>';
             calendarHTML += '<button class="icon-button" month-val="prev" title="Previous Month"><span class="chevron-arrow-left"></span></button>';
-            calendarHTML +=  '<p>'+_.$formatDate(new Date(monthName +' '+ new_year), _.options.titleFormat, 'en')+'</p>';
+            calendarHTML +=  '<p>'+_.$cal_months_labels[parseInt(monthName) - 1] +' '+ new_year+'</p>';
             calendarHTML += '<button class="icon-button" month-val="next" title="Next Month"><span class="chevron-arrow-right"></span></button>';
             calendarHTML += '</div></th>';
             calendarHTML += '<td colspan="3">';
@@ -402,7 +417,7 @@
         }
 
         if(_.options.todayHighlight) {
-            $('.day[date-val="'+_.$formatDate(_.$cal_months_labels[_.$month] +'/'+ _.$cal_current_date.getDate() +'/'+ _.$year, _.options.format, 'en')+'"]').addClass('calendar-today');
+            $('.day[date-val="'+_.$formatDate(_.$cal_months[_.$month] +'/'+ _.$cal_current_date.getDate() +'/'+ _.$year, _.options.format, 'en')+'"]').addClass('calendar-today');
         }
 
         if(_.options.weekdayHighlight) {
@@ -422,7 +437,8 @@
         var _ = this;
         // prevent duplication
         $('.event-indicator').empty();
-        // find number of days in month
+
+		// find number of days in month
         var monthLength = _.$cal_days_in_month[_.$active_month];
 
         // compensate for leap year
@@ -434,11 +450,12 @@
         
         for (var i = 0; i < _.options.calendarEvents.length; i++) {
             for (var x = 0; x < monthLength; x++) {
-                var active_date = _.$formatDate(new Date(_.$cal_months_labels[_.$active_month] +'/'+ (x + 1) +'/'+ _.$active_year), _.options.format, 'en');
-                // console.log(active_date, _.$formatDate(new Date(_.options.calendarEvents[i].date), _.options.format, 'en'))
-                
+				var active_date = _.$formatDate(new Date(_.$cal_months[_.$active_month] +'/'+ parseInt(x + 1) +'/'+ _.$active_year), _.options.format, 'en');
+				// console.log(active_date, _.$formatDate(new Date(_.options.calendarEvents[i].date), _.options.format, 'en'))
+				var event_date = _.options.calendarEvents[i].date;
+
                 var thisDate = $('[date-val="'+active_date+'"]');
-                if(active_date==_.options.calendarEvents[i].date) {
+                if(active_date==event_date) {
                     thisDate.addClass('calendar-'+ _.options.calendarEvents[i].type);
 
                     if($('[date-val="'+active_date+'"] span.event-indicator').length == 0) {
@@ -488,7 +505,6 @@
                .off('click.evocalendar')
                .on('click.evocalendar', _.options.onAddEvent);
         }
-
 
         $('[date-val]')
            .off('click.evocalendar')
@@ -639,7 +655,7 @@
         var data = new_data;
         for(var i=0; i < data.length; i++) {
             if(_.isValidDate(data[i].date)) {
-                data[i].date = _.$formatDate(new Date(data[i].date), _.options.format, 'en');
+                data[i].date = _.$formatDate(new Date(data[i].date), 'mm/dd/yyyy', 'en');
                 _.options.calendarEvents.push(data[i]);
             }
         }
