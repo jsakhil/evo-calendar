@@ -349,8 +349,10 @@
                         eventHTML += '</div>';
                         eventHTML += '</div>';
                     } else if (_.options.calendarEvents[i].everyYear) {
-                        var d = _.$formatDate(new Date(_.$active_date), 'mm/dd', 'en');
-                        var dd = _.$formatDate(new Date(_.options.calendarEvents[i].date), 'mm/dd', 'en');
+						var dfix = (_.$active_date).split('/');
+						var datefix = (_.options.calendarEvents[i].date).split('/');
+						var d = dfix[0]+'/'+dfix[1];
+						var dd = datefix[0]+'/'+datefix[1];
                         if(d==dd) {
                             hasEventToday = true;
                             eventHTML += '<div class="event-container">';
@@ -364,7 +366,7 @@
                     }
                 };
                 if(!hasEventToday) {
-                    eventHTML += '<p>No event for this day.</p>';
+                    eventHTML += '<p>There is not any upcoming event at the moment, check back later!</p>';
                 }
                 eventHTML += '</div>';
                 _.$eventHTML = eventHTML;
@@ -447,14 +449,16 @@
                 monthLength = 29;
             }
         }
-        
+
+
         for (var i = 0; i < _.options.calendarEvents.length; i++) {
             for (var x = 0; x < monthLength; x++) {
 				var active_date = _.$formatDate(new Date(_.$cal_months[_.$active_month] +'/'+ parseInt(x + 1) +'/'+ _.$active_year), _.options.format, 'en');
 				// console.log(active_date, _.$formatDate(new Date(_.options.calendarEvents[i].date), _.options.format, 'en'))
-				var event_date = _.options.calendarEvents[i].date;
+				var event_date = _.options.calendarEvents[i].date
 
                 var thisDate = $('[date-val="'+active_date+'"]');
+
                 if(active_date==event_date) {
                     thisDate.addClass('calendar-'+ _.options.calendarEvents[i].type);
 
@@ -467,8 +471,11 @@
                         thisDate.find('.event-indicator').append(htmlToAppend);
                     }
                 } else if (_.options.calendarEvents[i].everyYear) {
-                    var d = _.$formatDate(new Date(active_date), 'mm/dd', 'en');
-                    var dd = _.$formatDate(new Date(_.options.calendarEvents[i].date), 'mm/dd', 'en');
+					var dfix = (active_date).split('/');
+					var datefix = (_.options.calendarEvents[i].date).split('/');
+					var d = dfix[0]+'/'+dfix[1];
+					var dd = datefix[0]+'/'+datefix[1];
+
                     if(d==dd) {
                         thisDate.addClass('calendar-'+ _.options.calendarEvents[i].type);
     
